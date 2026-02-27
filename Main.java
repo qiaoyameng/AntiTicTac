@@ -6,6 +6,7 @@ class TicTacToe {
 
     private static final int BOARD_SIZE = 5;
     private static final int LOSE_LENGTH = 3;
+    private static final int WIN_LENGTH = 4;
 
     private static final String EMPTY = " ";
 
@@ -122,6 +123,48 @@ class TicTacToe {
         return false;
     }
 
+    private boolean checkWinner(String[][] board, String player, Coord lastMove) {
+        // Define directions to check: Horizontal, Vertical, Diagonal, Anti-diagonal
+        int[][] directions = {{0, 1}, {1, 0}, {1, 1}, {1, -1}};
+        Coord coord = new Coord(-1, -1);
+
+        for (int[] dir : directions) {
+            int count = 1;  // Count the current cell
+
+            // Count consecutive matches in the forward direction up to WIN_LENGTH
+            for (int i = 1; i < WIN_LENGTH; i++) {
+                coord.row = lastMove.row + dir[0] * i;
+                coord.col = lastMove.col + dir[1] * i;
+                if (!isValidCoord(coord)) {
+                    break;
+                }
+                if (!isPlayerCell(board, player, coord)) {
+                    break;
+                }
+                count++;
+            }
+
+            // Count consecutive matches in the reverse direction up to WIN_LENGTH
+            for (int i = 1; i < WIN_LENGTH; i++) {
+                coord.row = lastMove.row - dir[0] * i;
+                coord.col = lastMove.col - dir[1] * i;
+                if (!isValidCoord(coord)) {
+                    break;
+                }
+                if (!isPlayerCell(board, player, coord)) {
+                    break;
+                }
+                count++;
+            }
+
+            // Player wins if they have at least WIN_LENGTH consecutive marks
+            if (count >= WIN_LENGTH) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isBoardFull() {
         return moveCount == BOARD_SIZE * BOARD_SIZE;
     }
@@ -131,7 +174,7 @@ class TicTacToe {
         String otherPlayer;      // The player who's not playing
         String[][] board = initialiseBoard();
 
-        System.out.println("Anti-Tic-Tac-Toe: Getting EXACTLY 3 in a row makes you LOSE!");
+        System.out.println("Make 4 in a row to WIN! But get 3 in a row first and you LOSE!");
 
         while (true) {
             otherPlayer = currentPlayer.equals(PLAYER_X)? PLAYER_O : PLAYER_X;      // Determine who's not playing
@@ -145,6 +188,12 @@ class TicTacToe {
                 continue;
             }
             makeMove(board, currentPlayer, move);
+
+            if (checkWinner(board, currentPlayer, move)) {
+                displayBoard(board);
+                System.out.printf("Player %s got 4 in a row and WINS!%n", currentPlayer);
+                break;
+            }
 
             if (checkLoser(board, currentPlayer, move)) {
                 displayBoard(board);
